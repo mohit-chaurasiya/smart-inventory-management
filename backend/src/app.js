@@ -6,6 +6,8 @@ const helmet = require("helmet");
 const authRoutes = require("./routes/authRoute");
 const productRoutes = require("./routes/productRoute");
 const inventoryRoutes = require("./routes/inventoryRoute");
+const dashboardRoutes = require("./routes/dashboardRoute");
+const customerRoutes = require("./routes/customerRoute");
 
 const app = express();
 
@@ -23,6 +25,8 @@ app.use(helmet());
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/inventory", inventoryRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/customers", customerRoutes);
 app.get("/", (req, res) => {
     res.status(200).json({
         success: true,

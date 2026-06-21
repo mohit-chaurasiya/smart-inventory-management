@@ -171,10 +171,39 @@ const deleteProduct = async (req, res) => {
     }
 };
 
+const getLowStockProducts = async (req, res) => {
+    try {
+
+        const lowStockProducts = await Product.find({
+            $expr: {
+                $lte: ["$stock", "$lowStockThreshold"]
+            }
+        })
+            .populate("createdBy", "fullName email")
+            .sort({ stock: 1 });
+
+        res.status(200).json({
+            success: true,
+            count: lowStockProducts.length,
+            products: lowStockProducts
+        });
+
+    } catch (error) {
+
+        console.log("Low Stock Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+};
+
 module.exports = {
     createProduct,
     getAllProducts,
     getSingleProduct,
     updateProduct,
     deleteProduct,
+    getLowStockProducts,
 };
