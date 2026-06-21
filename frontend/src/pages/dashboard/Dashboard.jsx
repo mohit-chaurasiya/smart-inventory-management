@@ -47,7 +47,7 @@ const Dashboard = () => {
       >
         <StatsCard
           title="Products"
-          value={stats?.totalProducts}
+          value={stats?.totalProducts || 0}
           icon={Package}
           color="text-emerald-500"
           bgColor="bg-emerald-100 dark:bg-emerald-500/10"
@@ -55,7 +55,7 @@ const Dashboard = () => {
 
         <StatsCard
           title="Inventory Qty"
-          value={stats?.totalInventoryQuantity}
+          value={stats?.totalInventoryQuantity || 0}
           icon={Boxes}
           color="text-violet-500"
           bgColor="bg-violet-100 dark:bg-violet-500/10"
@@ -63,7 +63,7 @@ const Dashboard = () => {
 
         <StatsCard
           title="Inventory Value"
-          value={`₹${stats?.totalInventoryValue}`}
+          value={`₹${stats?.totalInventoryValue}` || 0}
           icon={ShoppingCart}
           color="text-orange-500"
           bgColor="bg-orange-100 dark:bg-orange-500/10"
@@ -71,7 +71,7 @@ const Dashboard = () => {
 
         <StatsCard
           title="Low Stock"
-          value={stats?.lowStockProducts}
+          value={stats?.lowStockProducts || 0}
           icon={AlertTriangle}
           color="text-red-500"
           bgColor="bg-red-100 dark:bg-red-500/10"
@@ -122,14 +122,17 @@ const Dashboard = () => {
                     dark:border-slate-800
                   "
                 >
-                  <td className="py-4">{transaction.product?.name}</td>
+                  <td className="py-4">{transaction.product?.name || null}</td>
 
-                  <td className="py-4 capitalize">{transaction.type}</td>
+                  <td className="py-4 capitalize">
+                    {transaction.type || null}
+                  </td>
 
-                  <td className="py-4">{transaction.quantity}</td>
+                  <td className="py-4">{transaction.quantity || 0}</td>
 
                   <td className="py-4">
-                    {new Date(transaction.createdAt).toLocaleDateString()}
+                    {new Date(transaction.createdAt).toLocaleDateString() ||
+                      "--"}
                   </td>
                 </tr>
               ))}

@@ -8,7 +8,13 @@ const createProduct = async (req, res) => {
 
         const product = await Product.create({
             ...req.body,
+
+            image: req.file
+                ? req.file.path
+                : "",
+
             sku,
+
             createdBy: req.user._id,
         });
 
@@ -79,7 +85,7 @@ const getAllProducts = async (req, res) => {
 const getSingleProduct = async (req, res) => {
     try {
 
-        const product = await Product.findById({
+        const product = await Product.findOne({
             _id: req.params.id,
             createdBy: req.user._id
         })
@@ -111,14 +117,23 @@ const getSingleProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
     try {
 
+        const updateData = {
+            ...req.body
+        };
+
+        // Agar new image upload hui hai
+        if (req.file) {
+            updateData.image = req.file.path;
+        }
+
         const product = await Product.findOneAndUpdate(
             {
                 _id: req.params.id,
                 createdBy: req.user._id
             },
-            req.body,
+            updateData,
             {
-                new: true,
+                returnDocument: "after",
                 runValidators: true
             }
         );

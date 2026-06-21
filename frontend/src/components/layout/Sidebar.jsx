@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Sidebar = () => {
   const menuItems = [
@@ -55,6 +57,15 @@ const Sidebar = () => {
       icon: Settings,
     },
   ];
+
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+
+    navigate("/login");
+  };
 
   return (
     <aside
@@ -232,6 +243,7 @@ const Sidebar = () => {
 
             transition-all
           "
+          onClick={handleLogout}
         >
           <LogOut size={22} />
 

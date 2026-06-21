@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Moon, Sun, Bell, Search, ChevronDown } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 import { useTheme } from "../../context/ThemeContext";
 
@@ -7,6 +9,14 @@ const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    logout();
+
+    navigate("/login");
+  };
 
   return (
     <header
@@ -263,7 +273,9 @@ const Navbar = () => {
 
                   hover:bg-red-50
                   dark:hover:bg-red-950/30
+
                 "
+                onClick={handleLogout}
               >
                 Logout
               </button>
