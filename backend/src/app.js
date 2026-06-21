@@ -8,6 +8,7 @@ const productRoutes = require("./routes/productRoute");
 const inventoryRoutes = require("./routes/inventoryRoute");
 const dashboardRoutes = require("./routes/dashboardRoute");
 const customerRoutes = require("./routes/customerRoute");
+const saleRoutes = require("./routes/salesRoute");
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/customers", customerRoutes);
+app.use("/api/sales", saleRoutes);
 app.get("/", (req, res) => {
     res.status(200).json({
         success: true,
