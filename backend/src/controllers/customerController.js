@@ -28,7 +28,9 @@ const createCustomer = async (req, res) => {
 const getAllCustomers = async (req, res) => {
     try {
 
-        const customers = await Customer.find()
+        const customers = await Customer.find({
+            createdBy: req.user._id
+        })
             .sort({ createdAt: -1 });
 
         res.status(200).json({
@@ -52,7 +54,12 @@ const getSingleCustomer = async (req, res) => {
 
     try {
 
-        const customer = await Customer.findById(req.params.id);
+        const customer = await Customer.findOne(
+            {
+                createdBy: req.user._id,
+                _id: req.params.id
+            }
+        );
 
         if (!customer) {
             return res.status(404).json({
@@ -81,13 +88,18 @@ const updateCustomer = async (req, res) => {
 
     try {
 
-        const customer = await Customer.findByIdAndUpdate(
-            req.params.id,
+        const customer = await Customer.findByOneAndUpdate(
+            {
+                createdBy: req.user._id,
+                _id: req.params.id,
+
+            },
             req.body,
             {
                 new: true,
                 runValidators: true
             }
+
         );
 
         if (!customer) {
@@ -118,7 +130,10 @@ const deleteCustomer = async (req, res) => {
 
     try {
 
-        const customer = await Customer.findById(req.params.id);
+        const customer = await Customer.findOne({
+            _id: req.params.id,
+            createdBy: req.user._id
+        });
 
         if (!customer) {
             return res.status(404).json({

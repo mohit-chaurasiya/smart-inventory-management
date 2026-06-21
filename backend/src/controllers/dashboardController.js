@@ -4,15 +4,16 @@ const InventoryTransaction = require("../models/InventoryTransaction");
 const getDashboardStats = async (req, res) => {
     try {
 
-        const totalProducts = await Product.countDocuments();
+        const totalProducts = await Product.countDocuments({ createdBy: req.user._id });
 
         const lowStockProducts = await Product.countDocuments({
+            createdBy: req.user._id,
             $expr: {
                 $lte: ["$stock", "$lowStockThreshold"]
             }
         });
 
-        const products = await Product.find();
+        const products = await Product.find({ createdBy: req.user._id });
 
         const totalInventoryQuantity = products.reduce(
             (acc, product) => acc + product.stock,
@@ -25,7 +26,7 @@ const getDashboardStats = async (req, res) => {
             0
         );
 
-        const recentTransactions = await InventoryTransaction.find()
+        const recentTransactions = await InventoryTransaction.find({ createdBy: req.user._id })
             .populate("product", "name sku")
             .sort({ createdAt: -1 })
             .limit(5);

@@ -27,7 +27,10 @@ const createSale = async (req, res) => {
         // Process each item
         for (const item of items) {
 
-            const product = await Product.findById(item.product);
+            const product = await Product.findOne({
+                _id: item.product,
+                createdBy: req.user._id
+            });
 
             if (!product) {
                 return res.status(404).json({
@@ -92,7 +95,10 @@ const createSale = async (req, res) => {
         if (customer && dueAmount > 0) {
 
             const existingCustomer =
-                await Customer.findById(customer);
+                await Customer.findOne({
+                    _id: customer,
+                    createdBy: req.user._id
+                });
 
             if (existingCustomer) {
                 existingCustomer.totalDue += dueAmount;
@@ -132,7 +138,7 @@ const createSale = async (req, res) => {
 const getAllSales = async (req, res) => {
     try {
 
-        const sales = await Sale.find()
+        const sales = await Sale.find({ createdBy: req.user._id })
             .populate("customer", "name phone")
             .populate("items.product", "name sku")
             .populate("createdBy", "fullName")
@@ -158,7 +164,10 @@ const getAllSales = async (req, res) => {
 const getSingleSale = async (req, res) => {
     try {
 
-        const sale = await Sale.findById(req.params.id)
+        const sale = await Sale.findOne({
+            _id: req.params.id,
+            createdBy: req.user._id
+        })
             .populate("customer", "name phone email")
             .populate("items.product", "name sku")
             .populate("createdBy", "fullName");
@@ -197,6 +206,7 @@ const getTodaySales = async (req, res) => {
         end.setHours(23, 59, 59, 999);
 
         const sales = await Sale.find({
+            createdBy: req.user._id,
             createdAt: {
                 $gte: start,
                 $lte: end
@@ -230,7 +240,10 @@ const getTodaySales = async (req, res) => {
 const generateInvoice = async (req, res) => {
     try {
 
-        const sale = await Sale.findById(req.params.id)
+        const sale = await Sale.findOne({
+            _id: req.params.id,
+            createdBy: req.user._id
+        })
             .populate("customer", "name phone")
             .populate("items.product", "name");
 

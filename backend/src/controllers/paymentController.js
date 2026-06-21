@@ -12,7 +12,10 @@ const addPayment = async (req, res) => {
         } = req.body;
 
         const customer =
-            await Customer.findById(customerId);
+            await Customer.findOne({
+                _id: customerId,
+                createdBy: req.user._id
+            });
 
         if (!customer) {
             return res.status(404).json({

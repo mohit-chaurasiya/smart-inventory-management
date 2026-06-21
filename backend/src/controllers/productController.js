@@ -34,7 +34,7 @@ const getAllProducts = async (req, res) => {
 
         const { search, category, page = 1, limit = 10 } = req.query;
 
-        let query = {};
+        let query = { createdBy: req.user._id };
 
         // Search by product name
         if (search) {
@@ -79,7 +79,10 @@ const getAllProducts = async (req, res) => {
 const getSingleProduct = async (req, res) => {
     try {
 
-        const product = await Product.findById(req.params.id)
+        const product = await Product.findById({
+            _id: req.params.id,
+            createdBy: req.user._id
+        })
             .populate("createdBy", "fullName email");
 
         if (!product) {
@@ -108,8 +111,11 @@ const getSingleProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
     try {
 
-        const product = await Product.findByIdAndUpdate(
-            req.params.id,
+        const product = await Product.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                createdBy: req.user._id
+            },
             req.body,
             {
                 new: true,
@@ -144,7 +150,10 @@ const updateProduct = async (req, res) => {
 const deleteProduct = async (req, res) => {
     try {
 
-        const product = await Product.findById(req.params.id);
+        const product = await Product.findOne({
+            _id: req.params.id,
+            createdBy: req.user._id
+        });
 
         if (!product) {
             return res.status(404).json({
@@ -175,6 +184,7 @@ const getLowStockProducts = async (req, res) => {
     try {
 
         const lowStockProducts = await Product.find({
+            createdBy: req.user._id,
             $expr: {
                 $lte: ["$stock", "$lowStockThreshold"]
             }

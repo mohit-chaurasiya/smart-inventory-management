@@ -6,7 +6,10 @@ const addTransaction = async (req, res) => {
 
         const { productId, type, quantity, notes } = req.body;
 
-        const product = await Product.findById(productId);
+        const product = await Product.findOne({
+            _id: productId,
+            createdBy: req.user._id
+        });
 
         if (!product) {
             return res.status(404).json({
@@ -80,7 +83,7 @@ const addTransaction = async (req, res) => {
 const getAllTransactions = async (req, res) => {
     try {
 
-        const transactions = await InventoryTransaction.find()
+        const transactions = await InventoryTransaction.find({ createdBy: req.user._id })
             .populate("product", "name sku")
             .populate("createdBy", "fullName")
             .sort({ createdAt: -1 });
@@ -106,7 +109,8 @@ const getProductTransactions = async (req, res) => {
     try {
 
         const transactions = await InventoryTransaction.find({
-            product: req.params.productId
+            product: req.params.productId,
+            createdBy: req.user._id
         })
             .populate("product", "name sku")
             .populate("createdBy", "fullName")
