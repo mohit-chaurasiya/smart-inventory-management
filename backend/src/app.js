@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 const helmet = require("helmet");
 const authRoutes = require("./routes/authRoute");
+const productRoutes = require("./routes/productRoute");
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use(helmet());
 // Route
 
 app.use("/api/auth", authRoutes);
+app.use("/api/products", productRoutes);
 app.get("/", (req, res) => {
     res.status(200).json({
         success: true,
