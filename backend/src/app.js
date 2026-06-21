@@ -3,6 +3,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 const helmet = require("helmet");
+const authRoutes = require("./routes/authRoute");
 
 const app = express();
 
@@ -14,7 +15,10 @@ app.use(cookieParser());
 app.use(morgan("dev"));
 app.use(helmet());
 
-// Test Route
+
+// Route
+
+app.use("/api/auth", authRoutes);
 app.get("/", (req, res) => {
     res.status(200).json({
         success: true,

@@ -98,7 +98,7 @@ npm run dev
 - [x] Backend Setup
 - [x] MongoDB Connection
 - [x] Environment Configuration
-- [ ] Authentication Module
+- [  ] Authentication Module
 - [ ] Product Management
 - [ ] Sales Management
 - [ ] AI Invoice Processing
