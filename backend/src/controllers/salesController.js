@@ -1,7 +1,8 @@
-const Sale = require("../models/Sale");
+const Sale = require("../models/Sales");
 const Product = require("../models/Product");
 const Customer = require("../models/Customer");
 const InventoryTransaction = require("../models/InventoryTransaction");
+const PDFDocument = require("pdfkit");
 
 const createSale = async (req, res) => {
     try {
@@ -128,6 +129,230 @@ const createSale = async (req, res) => {
     }
 };
 
+const getAllSales = async (req, res) => {
+    try {
+
+        const sales = await Sale.find()
+            .populate("customer", "name phone")
+            .populate("items.product", "name sku")
+            .populate("createdBy", "fullName")
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: sales.length,
+            sales
+        });
+
+    } catch (error) {
+
+        console.log("Get Sales Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+};
+
+const getSingleSale = async (req, res) => {
+    try {
+
+        const sale = await Sale.findById(req.params.id)
+            .populate("customer", "name phone email")
+            .populate("items.product", "name sku")
+            .populate("createdBy", "fullName");
+
+        if (!sale) {
+            return res.status(404).json({
+                success: false,
+                message: "Sale not found"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            sale
+        });
+
+    } catch (error) {
+
+        console.log("Get Sale Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+};
+
+const getTodaySales = async (req, res) => {
+
+    try {
+
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+
+        const end = new Date();
+        end.setHours(23, 59, 59, 999);
+
+        const sales = await Sale.find({
+            createdAt: {
+                $gte: start,
+                $lte: end
+            }
+        });
+
+        const totalSales = sales.reduce(
+            (acc, sale) => acc + sale.totalAmount,
+            0
+        );
+
+        res.status(200).json({
+            success: true,
+            totalTransactions: sales.length,
+            totalSales
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+};
+
+
+
+const generateInvoice = async (req, res) => {
+    try {
+
+        const sale = await Sale.findById(req.params.id)
+            .populate("customer", "name phone")
+            .populate("items.product", "name");
+
+        if (!sale) {
+            return res.status(404).json({
+                success: false,
+                message: "Sale not found"
+            });
+        }
+
+        const doc = new PDFDocument();
+
+        res.setHeader(
+            "Content-Type",
+            "application/pdf"
+        );
+
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename=invoice-${sale._id}.pdf`
+        );
+
+        doc.pipe(res);
+
+        // Heading
+        doc
+            .fontSize(22)
+            .text("Smart Inventory AI", {
+                align: "center"
+            });
+
+        doc.moveDown();
+
+        doc
+            .fontSize(16)
+            .text(`Invoice ID: ${sale._id}`);
+
+        doc.text(
+            `Date: ${sale.createdAt.toDateString()}`
+        );
+
+        doc.moveDown();
+
+        // Customer
+        if (sale.customer) {
+
+            doc
+                .fontSize(14)
+                .text("Customer Details");
+
+            doc.text(
+                `Name: ${sale.customer.name}`
+            );
+
+            doc.text(
+                `Phone: ${sale.customer.phone}`
+            );
+
+            doc.moveDown();
+        }
+
+        // Products
+        doc.fontSize(14).text("Items");
+
+        sale.items.forEach((item, index) => {
+
+            doc.text(
+                `${index + 1}. ${item.product.name}`
+            );
+
+            doc.text(
+                `Quantity: ${item.quantity}`
+            );
+
+            doc.text(
+                `Price: ₹${item.price}`
+            );
+
+            doc.text(
+                `Subtotal: ₹${item.subtotal}`
+            );
+
+            doc.moveDown();
+        });
+
+        doc.moveDown();
+
+        doc.text(
+            `Total Amount: ₹${sale.totalAmount}`
+        );
+
+        doc.text(
+            `Paid Amount: ₹${sale.paidAmount}`
+        );
+
+        doc.text(
+            `Due Amount: ₹${sale.dueAmount}`
+        );
+
+        doc.text(
+            `Payment Status: ${sale.paymentStatus}`
+        );
+
+        doc.end();
+
+    } catch (error) {
+
+        console.log("Invoice Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+};
+
+
+
 module.exports = {
-    createSale
+    createSale,
+    getAllSales,
+    getSingleSale,
+    getTodaySales,
+    generateInvoice
 };
