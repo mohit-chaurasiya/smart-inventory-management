@@ -5,6 +5,9 @@ import StatsCard from "../../components/dashboard/StatsCard";
 import { Package, ShoppingCart, AlertTriangle, Boxes } from "lucide-react";
 
 import { getDashboardStats } from "../../services/dashboardService";
+import usePagination from "../../hooks/usePagination";
+
+import Pagination from "../../components/common/Pagination";
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
@@ -27,6 +30,9 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
+
+  const { currentPage, totalPages, paginatedData, nextPage, prevPage } =
+    usePagination(transactions, 5);
 
   if (loading) {
     return <h1>Loading...</h1>;
@@ -113,7 +119,7 @@ const Dashboard = () => {
             </thead>
 
             <tbody>
-              {transactions.map((transaction) => (
+              {paginatedData.map((transaction) => (
                 <tr
                   key={transaction._id}
                   className="
@@ -138,6 +144,12 @@ const Dashboard = () => {
               ))}
             </tbody>
           </table>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            nextPage={nextPage}
+            prevPage={prevPage}
+          />
         </div>
       </div>
     </div>

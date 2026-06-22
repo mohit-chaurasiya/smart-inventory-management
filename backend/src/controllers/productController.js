@@ -1,4 +1,6 @@
+const InventoryTransaction = require("../models/InventoryTransaction");
 const Product = require("../models/Product");
+
 const { nanoid } = require("nanoid");
 
 const createProduct = async (req, res) => {
@@ -224,6 +226,78 @@ const getLowStockProducts = async (req, res) => {
     }
 };
 
+const updateStock = async (req, res) => {
+    try {
+
+        const { quantity, operation } = req.body;
+
+        const product = await Product.findById(
+            req.params.id
+        );
+
+        if (!product) {
+            return res.status(404).json({
+                message: "Product not found",
+            });
+        }
+
+        if (operation === "add") {
+            product.stock += Number(quantity);
+        }
+
+        if (operation === "remove") {
+
+            if (
+                product.stock < Number(quantity)
+            ) {
+                return res.status(400).json({
+                    message:
+                        "Insufficient stock available",
+                });
+            }
+
+            product.stock -= Number(quantity);
+        }
+
+        await product.save();
+
+        const previousStock = product.stock;
+
+        await InventoryTransaction.create({
+            product: product._id,
+
+            type:
+                operation === "add"
+                    ? "purchase"
+                    : "manual",
+
+            quantity: qty,
+
+            previousStock,
+
+            currentStock: product.stock,
+
+            notes: note,
+
+            createdBy: req.user._id,
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Stock updated successfully",
+            product,
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+            message: "Internal Server Error",
+        });
+    }
+};
+
 module.exports = {
     createProduct,
     getAllProducts,
@@ -231,4 +305,5 @@ module.exports = {
     updateProduct,
     deleteProduct,
     getLowStockProducts,
+    updateStock
 };

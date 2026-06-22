@@ -1,5 +1,8 @@
 import { Pencil, Trash2, Users } from "lucide-react";
 import toast from "react-hot-toast";
+import usePagination from "../../hooks/usePagination";
+
+import Pagination from "../common/Pagination";
 
 import { deleteCustomer } from "../../services/customerService";
 
@@ -9,6 +12,8 @@ const CustomerTable = ({
   setOpenModal,
   setSelectedCustomer,
 }) => {
+  const { currentPage, totalPages, paginatedData, nextPage, prevPage } =
+    usePagination(customers, 5);
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this customer?",
@@ -56,7 +61,7 @@ const CustomerTable = ({
             <p className="text-slate-500 mt-2">Add your first customer.</p>
           </div>
         ) : (
-          customers.map((customer) => (
+          paginatedData.map((customer) => (
             <div
               key={customer._id}
               className="
@@ -186,7 +191,7 @@ const CustomerTable = ({
                 </td>
               </tr>
             ) : (
-              customers.map((customer) => (
+              paginatedData.map((customer) => (
                 <tr
                   key={customer._id}
                   className="
@@ -245,6 +250,12 @@ const CustomerTable = ({
             )}
           </tbody>
         </table>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          nextPage={nextPage}
+          prevPage={prevPage}
+        />
       </div>
     </div>
   );

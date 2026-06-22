@@ -10,6 +10,8 @@ const dashboardRoutes = require("./routes/dashboardRoute");
 const customerRoutes = require("./routes/customerRoute");
 const saleRoutes = require("./routes/salesRoute");
 const paymentRoutes = require("./routes/paymentRoute");
+const invoiceRoutes =
+    require("./routes/invoiceRoutes");
 
 const app = express();
 
@@ -31,6 +33,11 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/sales", saleRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use(
+    "/api/invoice",
+
+    invoiceRoutes
+);
 app.get("/", (req, res) => {
     res.status(200).json({
         success: true,

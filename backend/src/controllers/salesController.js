@@ -23,6 +23,8 @@ const createSale = async (req, res) => {
 
         let saleItems = [];
         let totalAmount = 0;
+        const invoiceNumber =
+            `INV-${Date.now()}`;
 
         // Process each item
         for (const item of items) {
@@ -108,6 +110,7 @@ const createSale = async (req, res) => {
 
         // Save Sale
         const sale = await Sale.create({
+            invoiceNumber,
             customer,
             items: saleItems,
             totalAmount,
@@ -240,21 +243,21 @@ const getTodaySales = async (req, res) => {
 const generateInvoice = async (req, res) => {
     try {
 
-        const sale = await Sale.findOne({
-            _id: req.params.id,
-            createdBy: req.user._id
-        })
+        const sale = await Sale.findById(req.params.id)
             .populate("customer", "name phone")
             .populate("items.product", "name");
 
         if (!sale) {
             return res.status(404).json({
                 success: false,
-                message: "Sale not found"
+                message: "Sale not found",
             });
         }
 
-        const doc = new PDFDocument();
+        const doc = new PDFDocument({
+            margin: 50,
+            size: "A4",
+        });
 
         res.setHeader(
             "Content-Type",
@@ -263,100 +266,200 @@ const generateInvoice = async (req, res) => {
 
         res.setHeader(
             "Content-Disposition",
-            `attachment; filename=invoice-${sale._id}.pdf`
+            `attachment; filename=invoice-${sale.invoiceNumber || sale._id}.pdf`
         );
 
         doc.pipe(res);
 
-        // Heading
-        doc
-            .fontSize(22)
-            .text("Smart Inventory AI", {
-                align: "center"
-            });
-
-        doc.moveDown();
+        /* =========================
+           HEADER
+        ========================= */
 
         doc
-            .fontSize(16)
-            .text(`Invoice ID: ${sale._id}`);
+            .rect(0, 0, 612, 110)
+            .fill("#0F172A");
 
-        doc.text(
-            `Date: ${sale.createdAt.toDateString()}`
-        );
+        doc
+            .fillColor("white")
+            .fontSize(28)
+            .text("SMART INVENTORY AI", 50, 30);
 
-        doc.moveDown();
+        doc
+            .fontSize(14)
+            .fillColor("#94A3B8")
+            .text("Smart Inventory & Billing Solution", 50, 65);
 
-        // Customer
-        if (sale.customer) {
+        doc
+            .fontSize(26)
+            .fillColor("#14B8A6")
+            .text("INVOICE", 420, 40);
 
-            doc
-                .fontSize(14)
-                .text("Customer Details");
 
-            doc.text(
-                `Name: ${sale.customer.name}`
-            );
 
-            doc.text(
-                `Phone: ${sale.customer.phone}`
-            );
+        doc.save();
 
-            doc.moveDown();
-        }
-
-        // Products
-        doc.fontSize(14).text("Items");
-
-        sale.items.forEach((item, index) => {
-
-            doc.text(
-                `${index + 1}. ${item.product.name}`
-            );
-
-            doc.text(
-                `Quantity: ${item.quantity}`
-            );
-
-            doc.text(
-                `Price: ₹${item.price}`
-            );
-
-            doc.text(
-                `Subtotal: ₹${item.subtotal}`
-            );
-
-            doc.moveDown();
+        doc.rotate(-45, {
+            origin: [300, 400],
         });
 
-        doc.moveDown();
+        doc
+            .fontSize(80)
+            .fillColor("#E2E8F0")
+            .opacity(0.3)
+            .text(
+                sale.paymentStatus.toUpperCase(),
+                120,
+                350
+            );
 
-        doc.text(
-            `Total Amount: ₹${sale.totalAmount}`
-        );
+        doc.restore();
 
-        doc.text(
-            `Paid Amount: ₹${sale.paidAmount}`
-        );
+        /* =========================
+           INVOICE INFO
+        ========================= */
 
-        doc.text(
-            `Due Amount: ₹${sale.dueAmount}`
-        );
+        doc.roundedRect(50, 140, 240, 90, 10).stroke();
+        doc.roundedRect(320, 140, 240, 90, 10).stroke();
 
-        doc.text(
-            `Payment Status: ${sale.paymentStatus}`
-        );
+        doc
+            .fillColor("#14B8A6")
+            .fontSize(14)
+            .text("Customer Details", 340, 155);
+
+        doc
+            .fillColor("black")
+            .fontSize(11)
+            .text(
+                `Name: ${sale.customer?.name || "Walk-in Customer"}`,
+                340,
+                185
+            )
+            .text(
+                `Phone: ${sale.customer?.phone || "-"}`,
+                340,
+                205
+            );
+
+        doc
+            .fontSize(14)
+            .fillColor("#14B8A6")
+            .text("Invoice Details", 70, 155);
+
+        doc
+            .fillColor("black")
+            .fontSize(11)
+            .text(`Invoice No: ${sale.invoiceNumber}`, 70, 185)
+            .text(
+                `Date: ${new Date(sale.createdAt).toLocaleDateString()}`,
+                70,
+                205
+            );
+
+
+        /* =========================
+           ITEMS TABLE
+        ========================= */
+
+        const tableTop = 280;
+
+        doc
+            .rect(50, tableTop, 510, 30)
+            .fill("#14B8A6");
+
+        doc
+            .fillColor("white")
+            .fontSize(12)
+            .text("Product", 60, tableTop + 10)
+            .text("Qty", 300, tableTop + 10)
+            .text("Price", 370, tableTop + 10)
+            .text("Subtotal", 460, tableTop + 10);
+
+        let y = tableTop + 40;
+
+        sale.items.forEach((item) => {
+
+            doc
+                .fillColor("black")
+                .rect(50, y - 5, 510, 30)
+                .stroke("#CBD5E1");
+
+            doc
+                .text(item.product.name, 60, y)
+                .text(item.quantity.toString(), 300, y)
+                .text(`Rs. ${item.price}`, 370, y)
+                .text(`Rs. ${item.subtotal}`, 460, y);
+
+            y += 35;
+        });
+
+        /* =========================
+           SUMMARY BOX
+        ========================= */
+
+        doc
+            .roundedRect(340, y + 30, 220, 120, 10)
+            .fillAndStroke("#F8FAFC", "#CBD5E1");
+
+        doc
+            .fillColor("black")
+            .fontSize(12)
+            .text(`Total Amount`, 360, y + 50)
+            .text(`Rs. ${sale.totalAmount}`, 480, y + 50)
+
+            .text(`Paid Amount`, 360, y + 75)
+            .text(`Rs. ${sale.paidAmount}`, 480, y + 75)
+
+            .text(`Due Amount`, 360, y + 100)
+            .text(`Rs. ${sale.dueAmount}`, 480, y + 100)
+
+            .text(`Status`, 360, y + 125)
+            .text(
+                sale.paymentStatus.toUpperCase(),
+                480,
+                y + 125
+            );
+        /* =========================
+           FOOTER
+        ========================= */
+
+        doc
+            .moveTo(50, 700)
+            .lineTo(180, 700)
+            .stroke();
+
+        doc.text("Authorized Signature", 50, 710);
+
+        doc
+            .fontSize(11)
+            .fillColor("gray")
+            .text(
+                "Thank you for choosing Smart Inventory AI",
+                0,
+                760,
+                { align: "center" }
+            )
+
+            .text(
+                "support@smartinventory.com | +91 9876543210",
+                {
+                    align: "center",
+                }
+            );
 
         doc.end();
 
     } catch (error) {
 
-        console.log("Invoice Error:", error);
+        console.log(
+            "Invoice Generation Error:",
+            error
+        );
 
         res.status(500).json({
             success: false,
-            message: "Internal Server Error"
+            message: "Internal Server Error",
         });
+
     }
 };
 

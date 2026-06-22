@@ -68,6 +68,18 @@ const ProductTable = ({
               "
             >
               <div className="flex justify-between">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={product.image || "https://placehold.co/50x50"}
+                    className="
+      w-12 h-12
+
+      rounded-xl
+
+      object-cover
+    "
+                  />
+                </div>
                 <div>
                   <h3 className="font-semibold text-lg">{product.name}</h3>
 

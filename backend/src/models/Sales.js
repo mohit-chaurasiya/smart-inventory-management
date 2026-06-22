@@ -58,6 +58,10 @@ const saleSchema = new mongoose.Schema(
             enum: ["cash", "upi", "card"],
             default: "cash"
         },
+        invoiceNumber: {
+            type: String,
+            unique: true
+        },
 
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
