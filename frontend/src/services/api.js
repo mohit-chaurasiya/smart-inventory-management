@@ -2,6 +2,8 @@ import axios from "axios";
 
 const api = axios.create({
     baseURL: "https://smart-inventory-management-ixea.onrender.com/api",
+    // http://localhost:5000/api
+    // https://smart-inventory-management-ixea.onrender.com/api
 });
 
 api.interceptors.request.use((config) => {
